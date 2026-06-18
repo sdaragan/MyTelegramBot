@@ -34,7 +34,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif text == "🚚 Доставка":
-    await update.message.reply_text(
+        await update.message.reply_text(
         "🚚 ДОСТАВКА\n\n"
         "🕘 Понедельник–Пятница: 09:00–18:00\n"
         "🕘 Суббота–Воскресенье: 09:00–15:00\n\n"
@@ -45,7 +45,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     elif text == "📝 Оформить заказ":
-    await update.message.reply_text(
+        await update.message.reply_text(
         "📝 ОФОРМИТЬ ЗАКАЗ\n\n"
         "Отправьте заказ одним сообщением по шаблону:\n\n"
         "👤 Имя\n"
@@ -57,7 +57,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
         elif text == "🕒 Режим работы":
-        await update.message.reply_text(
+            await update.message.reply_text(
             "🕒 РЕЖИМ РАБОТЫ\n\n"
             "• Понедельник – Пятница: 08:00 – 19:00\n\n"
             "• Суббота – Воскресенье: 08:00 – 16:00\n\n"
@@ -74,7 +74,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif text == "📞 Контакты":
-    await update.message.reply_text(
+        await update.message.reply_text(
         "📞 КОНТАКТЫ\n\n"
         "🏠 Столовая «Щи-Борщи»\n\n"
         "📍 Адрес:\n"
