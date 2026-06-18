@@ -56,8 +56,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📞 +7 949 371-48-07"
     )
 
-        elif text == "🕒 Режим работы":
-            await update.message.reply_text(
+    elif text == "🕒 Режим работы":
+        await update.message.reply_text(
             "🕒 РЕЖИМ РАБОТЫ\n\n"
             "• Понедельник – Пятница: 08:00 – 19:00\n\n"
             "• Суббота – Воскресенье: 08:00 – 16:00\n\n"
