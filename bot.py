@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
@@ -8,14 +8,25 @@ main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
     ["🚚 Доставка", "📝 Оформить заказ"],
     ["🕒 Режим работы", "💳 Оплата"],
-    ["📞 Контакты", "📢 Наш канал"]
+    ["📞 Контакты"]
 ]
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    channel_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 Подписаться на канал", url="https://t.me/shchiborshchidonetsk")]
+    ])
+
     await update.message.reply_text(
-        "Здравствуйте! Вас приветствует столовая «Щи-Борщи».\n\nВыберите нужный раздел:",
+        "Здравствуйте! Вас приветствует столовая «Щи-Борщи». 🍲\n\n"
+        "📢 Подписывайтесь на наш Telegram-канал, чтобы следить за последними новостями, свежим меню и приятными предложениями.\n\n"
+        "Нажмите кнопку ниже, чтобы перейти в канал 👇",
+        reply_markup=channel_keyboard
+    )
+
+    await update.message.reply_text(
+        "Выберите нужный раздел:",
         reply_markup=markup
     )
 
@@ -105,17 +116,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "+7 949 605-30-96\n\n"
         "🚚 Доставка по всем районам г. Донецка\n\n"
         "❤️ Спасибо, что выбираете нас!"
-    )
-
-    elif text == "📢 Наш канал":
-        await update.message.reply_text(
-            "📢 Добро пожаловать в официальный Telegram-канал столовой «Щи-Борщи»!\n\n"
-            "Подписывайтесь, чтобы не пропустить:\n"
-            "🍽 Новинки меню;\n"
-            "🎁 Акции и приятные предложения;\n"
-            "📢 Важные новости и изменения в работе столовой.\n\n"
-            "Спасибо, что выбираете «Щи-Борщи»! ❤️\n\n"
-            "@shchiborshchidonetsk"
     )
 
     else:
