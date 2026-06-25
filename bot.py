@@ -66,7 +66,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     elif text == "📝 Оформить заказ":
-        ]context.user_data["waiting_for_order"] = True
+        context.user_data["waiting_for_order"] = True
         await update.message.reply_text(
         "📝 ОФОРМИТЬ ЗАКАЗ\n\n"
         "Отправьте заказ одним сообщением по шаблону:\n\n"
