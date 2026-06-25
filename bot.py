@@ -2,6 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = "8635192315:AAHMavDFFCZmvpoyjh_tjuZggeCYGpwG8TI"
+ADMIN_ID = 6429081620
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -20,6 +21,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+    buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
+
+    if context.user_data.get("waiting_for_order") and text not in buttons:
+        context.user_data["waiting_for_order"] = False
+
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=(
+                "🔔 НОВЫЙ ЗАКАЗ\n\n"
+                f"{text}\n\n"
+                "👤 От пользователя:\n"
+                f"@{update.message.from_user.username}"
+            )
+        )
+
+        await update.message.reply_text(
+            "✅ Спасибо! Ваш заказ получен.\n\n"
+            "Мы свяжемся с вами для подтверждения заказа."
+        )
+        return
 
     if text == "🍽 Меню":
         await update.message.reply_photo(
@@ -45,6 +66,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     elif text == "📝 Оформить заказ":
+        ]context.user_data["waiting_for_order"] = True
         await update.message.reply_text(
         "📝 ОФОРМИТЬ ЗАКАЗ\n\n"
         "Отправьте заказ одним сообщением по шаблону:\n\n"
