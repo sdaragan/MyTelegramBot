@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = "8635192315:AAHMavDFFCZmvpoyjh_tjuZggeCYGpwG8TI"
+TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
 
 main_keyboard = [
