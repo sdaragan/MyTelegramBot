@@ -1,9 +1,9 @@
 import os
+import sqlite3
 
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-import os
 
 TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
@@ -17,19 +17,31 @@ main_keyboard = [
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 
+def init_db():
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def save_user(user_id):
-    filename = "users.txt"
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
 
-    if not os.path.exists(filename):
-        with open(filename, "w") as f:
-            pass
+    cursor.execute(
+        "INSERT OR IGNORE INTO users (user_id) VALUES (?)",
+        (user_id,)
+    )
 
-    with open(filename, "r") as f:
-        users = f.read().splitlines()
-
-    if str(user_id) not in users:
-        with open(filename, "a") as f:
-            f.write(f"{user_id}\n")
+    conn.commit()
+    conn.close()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -140,6 +152,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
+init_db()
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
