@@ -1,12 +1,26 @@
 import os
 import sqlite3
 
-from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    ConversationHandler,
+    filters,
+)
 
 TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
+
+WAITING_BROADCAST = 1
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -42,6 +56,44 @@ def save_user(user_id):
 
     conn.commit()
     conn.close()
+
+async def send(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    await update.message.reply_text(
+        "Введите текст, который хотите разослать всем пользователям."
+    )
+    return WAITING_BROADCAST
+
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT user_id FROM users")
+    users = cursor.fetchall()
+
+    sent = 0
+
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user[0],
+                text=text
+            )
+            sent += 1
+        except:
+            pass
+
+    conn.close()
+
+    await update.message.reply_text(
+        f"Рассылка завершена.\n\nОтправлено: {sent}"
+    )
+
+    return ConversationHandler.END
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -155,7 +207,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 init_db()
 app = ApplicationBuilder().token(TOKEN).build()
 
+conv_handler = ConversationHandler(
+    entry_points=[CommandHandler("send", send)],
+    states={
+        WAITING_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)]
+    },
+    fallbacks=[],
+)
+
+app.add_handler(conv_handler)
 app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT, handle_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 app.run_polling()
