@@ -1,6 +1,8 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
+import os
+
 TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
 
@@ -13,7 +15,23 @@ main_keyboard = [
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 
+def save_user(user_id):
+    filename = "users.txt"
+
+    if not os.path.exists(filename):
+        with open(filename, "w") as f:
+            pass
+
+    with open(filename, "r") as f:
+        users = f.read().splitlines()
+
+    if str(user_id) not in users:
+        with open(filename, "a") as f:
+            f.write(f"{user_id}\n")
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    save_user(user_id)
     channel_keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("📢 Подписаться на канал", url="https://t.me/shchiborshchidonetsk")]
     ])
