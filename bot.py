@@ -84,8 +84,8 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=text
             )
             sent += 1
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     conn.close()
 
