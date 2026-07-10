@@ -69,6 +69,22 @@ async def send(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return WAITING_BROADCAST
 
+async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM users")
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    await update.message.reply_text(
+        f"👥 Пользователей в базе: {count}"
+    )
+
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -220,6 +236,7 @@ conv_handler = ConversationHandler(
 
 app.add_handler(conv_handler)
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("users", users))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 app.run_polling()
