@@ -134,7 +134,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    save_user(update.effective_user.id)
+
     text = update.message.text
+   
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
 
     if context.user_data.get("waiting_for_order") and text not in buttons:
