@@ -35,7 +35,6 @@ import os
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 
-
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -45,9 +44,6 @@ def init_db():
             user_id INTEGER PRIMARY KEY
         )
     """)
-
-    conn.commit()
-    conn.close()
 
     conn.commit()
     conn.close()
