@@ -31,8 +31,13 @@ main_keyboard = [
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 
+import os
+
+DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+
+
 def init_db():
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -44,9 +49,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+    conn.commit()
+    conn.close()
 
 def save_user(user_id):
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -69,7 +76,7 @@ async def send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT user_id FROM users")
