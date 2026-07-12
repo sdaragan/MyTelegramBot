@@ -623,7 +623,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif text == "🍽 Меню":
-        await update.message.reply_photo(
         photo = get_setting("menu_photo")
 
         if photo:
@@ -631,13 +630,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 photo=photo,
                 caption="🍽 Меню"
             )
-         else:
+        else:
             await update.message.reply_text(
                 "Фото меню ещё не загружено."
             )
 
     elif text == "🥘 Комплексные обеды":
-        await update.message.reply_photo(
         photo = get_setting("lunch_photo")
 
         if photo:
