@@ -212,16 +212,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=channel_keyboard
     )
 
-if update.effective_user.id == ADMIN_ID:
-    await update.message.reply_text(
-        "Добро пожаловать, администратор 👋",
-        reply_markup=admin_button_markup
-    )
-else:
-    await update.message.reply_text(
-        "Выберите нужный раздел:",
-        reply_markup=markup
-    )
+    if update.effective_user.id == ADMIN_ID:
+        await update.message.reply_text(
+            "Добро пожаловать, администратор 👋",
+            reply_markup=admin_button_markup
+        )
+    else:
+        await update.message.reply_text(
+            "Выберите нужный раздел:",
+            reply_markup=markup
+        )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
