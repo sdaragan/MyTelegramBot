@@ -88,6 +88,27 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Пользователей в базе: {count}"
     )
 
+async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM users")
+    users_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COALESCE(SUM(orders), 0) FROM users")
+    orders_count = cursor.fetchone()[0]
+
+    conn.close()
+
+    await update.message.reply_text(
+        f"📊 Статистика\n\n"
+        f"👥 Пользователей: {users_count}\n"
+        f"🛒 Всего заказов: {orders_count}"
+    )
+
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -310,6 +331,7 @@ conv_handler = ConversationHandler(
 app.add_handler(conv_handler)
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("users", users))
+app.add_handler(CommandHandler("stats", stats))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 app.run_polling()
