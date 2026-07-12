@@ -105,8 +105,8 @@ async def send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "📝 Введите текст, который хотите отправить всем пользователям.",
-        reply_markup=confirm_broadcast_markup
     )
+
     return WAITING_BROADCAST
 
 async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
