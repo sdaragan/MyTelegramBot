@@ -151,7 +151,7 @@ async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def broadcast_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.photo:
         await update.message.reply_text(
-            "❌ Пожалуйста, отправьте фотографию."
+            "❌ Пожалуйста, отправьте фотографию"
         )
         return WAITING_PHOTO
 
