@@ -96,8 +96,15 @@ async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return WAITING_PHOTO
 
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+async def broadcast_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message.photo:
+        await update.message.reply_text(
+            "❌ Пожалуйста, отправьте фотографию."
+        )
+        return WAITING_PHOTO
+
+    photo = update.message.photo[-1].file_id
+    caption = update.message.caption or ""
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -111,9 +118,10 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for user in users:
         try:
-            await context.bot.send_message(
+            await context.bot.send_photo(
                 chat_id=user[0],
-                text=text
+                photo=photo,
+                caption=caption
             )
             sent += 1
         except Exception as e:
