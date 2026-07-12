@@ -272,6 +272,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "🖼 Рассылка фото":
             return await sendphoto(update, context)
 
+        elif text == "📦 Заказы":
+
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT COALESCE(SUM(orders), 0) FROM users")
+            orders_count = cursor.fetchone()[0]
+
+            conn.close()
+
+            await update.message.reply_text(
+                f"📦 Заказы\n\n"
+                f"📊 Всего заказов: {orders_count}\n\n"
+                f"💬 Все новые заказы автоматически отправляются в чат администратора.\n"
+                f"Используйте этот чат для просмотра и обработки заказов."
+            )
+
+            return
+
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
 
     if context.user_data.get("waiting_for_order") and text not in buttons:
