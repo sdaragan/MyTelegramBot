@@ -34,6 +34,15 @@ admin_button_keyboard = [
     ["⚙️ Админ-панель"]
 ]
 
+confirm_broadcast_keyboard = [
+    ["✅ Отправить", "❌ Отмена"]
+]
+
+confirm_broadcast_markup = ReplyKeyboardMarkup(
+    confirm_broadcast_keyboard,
+    resize_keyboard=True
+)
+
 admin_keyboard = [
     ["👥 Пользователи", "📊 Статистика"],
     ["📢 Рассылка текста", "🖼 Рассылка фото"],
@@ -94,7 +103,8 @@ async def send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     await update.message.reply_text(
-        "Введите текст, который хотите разослать всем пользователям."
+        "📝 Введите текст, который хотите отправить всем пользователям.",
+        reply_markup=confirm_broadcast_markup
     )
     return WAITING_BROADCAST
 
