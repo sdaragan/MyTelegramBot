@@ -703,6 +703,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             get_setting("contacts_text")
         )
 
+    if text == "📝 Изменить текст":
+        await update.message.reply_text(
+            "📝 Отправьте новый текст."
+        )
+        return await setting_text(update, context)
+
+    if text == "🖼 Изменить фото":
+        await update.message.reply_text(
+            "🖼 Отправьте новую фотографию."
+        )
+        return await setting_photo(update, context)
+
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
 init_db()
