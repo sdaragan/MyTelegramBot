@@ -373,12 +373,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await stats(update, context)
             return
 
-        elif text == "📢 Рассылка текста":
-            return await send(update, context)
-
-        elif text == "🖼 Рассылка фото":
-            return await sendphoto(update, context)
-
         elif text == "📦 Заказы":
 
             conn = sqlite3.connect(DB_PATH)
@@ -503,9 +497,20 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 conv_handler = ConversationHandler(
     entry_points=[
-        CommandHandler("send", send),
-        CommandHandler("sendphoto", sendphoto),
-    ],
+    CommandHandler("send", send),
+    CommandHandler("sendphoto", sendphoto),
+
+    MessageHandler(
+        filters.TEXT & filters.Regex("^📢 Рассылка текста$"),
+        send
+    ),
+
+    MessageHandler(
+        filters.TEXT & filters.Regex("^🖼 Рассылка фото$"),
+        sendphoto
+    ),
+],
+
     states={
         WAITING_BROADCAST: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)
