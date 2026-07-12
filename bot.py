@@ -120,12 +120,12 @@ def init_db():
         "📞 Контакты\n\n"
         "г. Донецк\n"
         "+7 949 605-30-96",
-    }
 
         "menu_photo": "",
         "lunch_photo": "",
         "delivery_photo": "",
         "work_photo": "",
+    }
 
     for key, value in defaults.items():
         cursor.execute(
