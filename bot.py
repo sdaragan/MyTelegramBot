@@ -341,11 +341,11 @@ async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "🖼 Изменить фото":
-    context.user_data["editing"] = section
+        context.user_data["editing"] = section
         await update.message.reply_text("📷 Отправьте новую фотографию.")
         return WAITING_SETTING_PHOTO
 
-    if text == "📝 Изменить текст":
+    elif text == "📝 Изменить текст":
         await update.message.reply_text("✏️ Отправьте новый текст.")
         return WAITING_SETTING_TEXT
 
