@@ -327,7 +327,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-    return ConversationHandler.END
+    return WAITING_SETTING_TEXT
 
 async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -700,17 +700,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     if text == "📝 Изменить текст":
-        await update.message.reply_text(
-            "📝 Отправьте новый текст."
-        )
         return await setting_text(update, context)
 
     if text == "🖼 Изменить фото":
-        await update.message.reply_text(
-            "🖼 Отправьте новую фотографию."
-        )
-        return await setting_photo(update, context)
-
+        return await setting_text(update, context)
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
 init_db()
