@@ -45,6 +45,19 @@ markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 admin_button_markup = ReplyKeyboardMarkup(admin_button_keyboard, resize_keyboard=True)
 admin_markup = ReplyKeyboardMarkup(admin_keyboard, resize_keyboard=True)
 
+admin_main_keyboard = [
+    ["🍽 Меню", "🍲 Комплексные обеды"],
+    ["🚚 Доставка", "📝 Оформить заказ"],
+    ["🕒 Режим работы", "💳 Оплата"],
+    ["📞 Контакты"],
+    ["⚙️ Админ-панель"]
+]
+
+admin_main_markup = ReplyKeyboardMarkup(
+    admin_main_keyboard,
+    resize_keyboard=True
+)
+
 import os
 
 DB_PATH = "/data/users.db"
@@ -215,8 +228,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_ID:
         await update.message.reply_text(
             "Добро пожаловать, администратор 👋",
-            reply_markup=admin_button_markup
+            reply_markup=admin_main_markup
         )
+
     else:
         await update.message.reply_text(
             "Выберите нужный раздел:",
@@ -240,7 +254,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif text == "🔙 Главное меню":
             await update.message.reply_text(
                 "Главное меню",
-                reply_markup=admin_button_markup
+                reply_markup=admin_main_markup
             )
             return
 
