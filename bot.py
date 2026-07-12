@@ -95,8 +95,43 @@ def init_db():
             user_id INTEGER PRIMARY KEY,
             orders INTEGER DEFAULT 0
         )
-       
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    """)
+
+    defaults = {
+        "delivery_text":
+        "🚚 ДОСТАВКА\n\n"
+        "🕘 Пн–Пт: 09:00–18:00\n"
+        "🕘 Сб–Вс: 09:00–15:00\n\n"
+        "💰 Минимальный заказ: 900 ₽",
+
+        "work_text":
+        "🕒 РЕЖИМ РАБОТЫ\n\n"
+        "Пн–Пт 08:00–19:00\n"
+        "Сб–Вс 08:00–16:00",
+
+        "contacts_text":
+        "📞 Контакты\n\n"
+        "г. Донецк\n"
+        "+7 949 605-30-96",
+    }
+
+        "menu_photo": "",
+        "lunch_photo": "",
+        "delivery_photo": "",
+        "work_photo": "",
+
+    for key, value in defaults.items():
+        cursor.execute(
+            "INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)",
+            (key, value)
+        )
 
     conn.commit()
     conn.close()
@@ -108,6 +143,42 @@ def save_user(user_id):
     cursor.execute(
         "INSERT OR IGNORE INTO users (user_id) VALUES (?)",
         (user_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+def get_setting(key):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT value FROM settings WHERE key = ?",
+        (key,)
+    )
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row:
+        return row[0]
+
+    return ""
+
+
+def set_setting(key, value):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO settings(key, value)
+        VALUES(?, ?)
+        ON CONFLICT(key)
+        DO UPDATE SET value = excluded.value
+        """,
+        (key, value)
     )
 
     conn.commit()
@@ -234,22 +305,103 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
 
-    if text in [
-        "🍽 Обновить меню",
-        "🥘 Обновить обеды",
-        "🚚 Обновить доставку",
-        "🕒 Обновить режим"
-    ]:
-        context.user_data["editing_section"] = text
+    sections = {
+        "🍽 Обновить меню": "menu",
+        "🥘 Обновить обеды": "lunch",
+        "🚚 Обновить доставку": "delivery",
+        "🕒 Обновить режим": "work",
+    }
+
+    if text in sections:
+        context.user_data["editing"] = sections[text]
 
         await update.message.reply_text(
             f"Вы выбрали:\n\n{text}\n\nЧто хотите изменить?",
-            reply_markup=settings_markup
+            reply_markup=ReplyKeyboardMarkup(
+                [
+                    ["📝 Изменить текст"],
+                    ["🖼 Изменить фото"],
+                    ["🔙 Настройки"],
+                ],
+                resize_keyboard=True,
+            ),
         )
+
+        if text in ("🍽 Обновить меню", "🥘 Обновить обеды"):
+            return WAITING_SETTING_PHOTO
+
+        return WAITING_SETTING_TEXT
 
     return ConversationHandler.END
 
 async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    section = context.user_data.get("editing")
+
+    if not section:
+        return ConversationHandler.END
+
+    text = update.message.text
+
+    if text == "🖼 Изменить фото":
+        await update.message.reply_text("📷 Отправьте новую фотографию.")
+        return WAITING_SETTING_PHOTO
+
+    if text == "📝 Изменить текст":
+        await update.message.reply_text("✏️ Отправьте новый текст.")
+        return WAITING_SETTING_TEXT
+
+    if section == "delivery":
+        set_setting("delivery_text", text)
+
+    elif section == "work":
+        set_setting("work_text", text)
+
+    elif section == "contacts":
+        set_setting("contacts_text", text)
+
+    context.user_data.pop("editing", None)
+
+    await update.message.reply_text(
+        "✅ Текст успешно обновлён.",
+        reply_markup=settings_markup
+    )
+
+    return ConversationHandler.END
+
+async def setting_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    if not update.message.photo:
+        await update.message.reply_text("❌ Отправьте фотографию.")
+        return WAITING_SETTING_PHOTO
+
+    photo = update.message.photo[-1].file_id
+
+    section = context.user_data.get("editing")
+
+    if section == "menu":
+        set_setting("menu_photo", photo)
+
+    elif section == "lunch":
+        set_setting("lunch_photo", photo)
+
+    elif section == "delivery":
+        set_setting("delivery_photo", photo)
+
+    elif section == "work":
+        set_setting("work_photo", photo)
+
+    context.user_data.pop("editing", None)
+
+    await update.message.reply_text(
+        "✅ Фото успешно обновлено.",
+        reply_markup=settings_markup
+    )
+
     return ConversationHandler.END
 
 async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -470,28 +622,43 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
-    if text == "🍽 Меню":
+    elif text == "🍽 Меню":
         await update.message.reply_photo(
-            photo=open("menu.jpg", "rb"),
-            caption="🍽 Меню"
-        )
+        photo = get_setting("menu_photo")
+
+        if photo:
+            await update.message.reply_photo(
+                photo=photo,
+                caption="🍽 Меню"
+            )
+         else:
+            await update.message.reply_text(
+                "Фото меню ещё не загружено."
+            )
 
     elif text == "🥘 Комплексные обеды":
         await update.message.reply_photo(
-            photo=open("lunch2.jpg", "rb"),
-            caption="🥘 Комплексные обеды"
-        )
+        photo = get_setting("lunch_photo")
+
+        if photo:
+            await update.message.reply_photo(
+                photo=photo,
+                caption="🥘 Комплексные обеды"
+            )
+        else:
+            await update.message.reply_text(
+                "Фото комплексных обедов ещё не загружено."
+            )
 
     elif text == "🚚 Доставка":
         await update.message.reply_text(
-        "🚚 ДОСТАВКА\n\n"
-        "🕘 Понедельник–Пятница: 09:00–18:00\n"
-        "🕘 Суббота–Воскресенье: 09:00–15:00\n\n"
-        "💰 Минимальный заказ: от 900 ₽\n\n"
-        "📍 Доставка во все районы г. Донецка\n\n"
-        "📞 Для уточнения времени доставки:\n"
-        "+7 949 605-30-96"
-    )
+            get_setting("delivery_text")
+        )
+
+        photo = get_setting("delivery_photo")
+ 
+        if photo:
+            await update.message.reply_photo(photo=photo)
 
     elif text == "📝 Оформить заказ":
         context.user_data["waiting_for_order"] = True
@@ -508,12 +675,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "🕒 Режим работы":
         await update.message.reply_text(
-            "🕒 РЕЖИМ РАБОТЫ\n\n"
-            "• Понедельник – Пятница: 08:00 – 19:00\n\n"
-            "• Суббота – Воскресенье: 08:00 – 16:00\n\n"
-            "❤️ Будем рады видеть вас в нашей столовой!"
+            get_setting("work_text")
         )
 
+        photo = get_setting("work_photo")
+
+        if photo:
+            await update.message.reply_photo(photo=photo)
+   
     elif text == "💳 Оплата":
         await update.message.reply_text(
             "💳 СПОСОБЫ ОПЛАТЫ\n\n"
@@ -525,15 +694,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "📞 Контакты":
         await update.message.reply_text(
-        "📞 КОНТАКТЫ\n\n"
-        "🏠 Столовая «Щи-Борщи»\n\n"
-        "📍 Адрес:\n"
-        "г. Донецк, ул. Калинина, 104\n\n"
-        "📞 Телефон:\n"
-        "+7 949 605-30-96\n\n"
-        "🚚 Доставка по всем районам г. Донецка\n\n"
-        "❤️ Спасибо, что выбираете нас!"
-    )
+            get_setting("contacts_text")
+        )
 
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
@@ -568,8 +730,16 @@ conv_handler = ConversationHandler(
         WAITING_PHOTO: [
             MessageHandler(filters.PHOTO, broadcast_photo)
         ],
-    },
-    
+
+        WAITING_SETTING_TEXT: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, setting_text)
+        ],
+
+        WAITING_SETTING_PHOTO: [
+            MessageHandler(filters.PHOTO, setting_photo)
+        ],
+},
+
     fallbacks=[],
 )
 
