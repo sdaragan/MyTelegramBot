@@ -368,6 +368,8 @@ async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def setting_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("SETTING PHOTO")
+
     if update.effective_user.id != ADMIN_ID:
         return ConversationHandler.END
 
