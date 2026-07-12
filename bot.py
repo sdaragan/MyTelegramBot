@@ -86,6 +86,35 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Пользователей в базе: {count}"
     )
 
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT user_id FROM users")
+    users = cursor.fetchall()
+
+    conn.close()
+
+    sent = 0
+
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user[0],
+                text=text
+            )
+            sent += 1
+        except Exception as e:
+            print(e)
+
+    await update.message.reply_text(
+        f"✅ Рассылка завершена.\n\nОтправлено: {sent}"
+    )
+
+    return ConversationHandler.END
+
 async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return ConversationHandler.END
