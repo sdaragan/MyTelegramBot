@@ -244,6 +244,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
+        elif text == "👥 Пользователи":
+            await users(update, context)
+            return
+
+        elif text == "📊 Статистика":
+            await stats(update, context)
+            return
+
+        elif text == "📢 Рассылка текста":
+            return await send(update, context)
+
+        elif text == "🖼 Рассылка фото":
+            return await sendphoto(update, context)
+
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
 
     if context.user_data.get("waiting_for_order") and text not in buttons:
