@@ -30,7 +30,20 @@ main_keyboard = [
     ["📞 Контакты"]
 ]
 
+admin_button_keyboard = [
+    ["⚙️ Админ-панель"]
+]
+
+admin_keyboard = [
+    ["👥 Пользователи", "📊 Статистика"],
+    ["📢 Рассылка текста", "🖼 Рассылка фото"],
+    ["📦 Заказы", "⚙️ Настройки"],
+    ["🔙 Главное меню"]
+]
+
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
+admin_button_markup = ReplyKeyboardMarkup(admin_button_keyboard, resize_keyboard=True)
+admin_markup = ReplyKeyboardMarkup(admin_keyboard, resize_keyboard=True)
 
 import os
 
@@ -199,6 +212,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=channel_keyboard
     )
 
+if update.effective_user.id == ADMIN_ID:
+    await update.message.reply_text(
+        "Добро пожаловать, администратор 👋",
+        reply_markup=admin_button_markup
+    )
+else:
     await update.message.reply_text(
         "Выберите нужный раздел:",
         reply_markup=markup
