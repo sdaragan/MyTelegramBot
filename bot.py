@@ -242,20 +242,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return WAITING_CONFIRM
 
-async def confirm_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return ConversationHandler.END
-
-    text = update.message.text
-
-    if text == "❌ Отмена":
-        context.user_data.pop("broadcast_text", None)
-        await update.message.reply_text(
-            "❌ Рассылка отменена.",
-            reply_markup=admin_markup
-        )
-        return ConversationHandler.END
-
     if text != "✅ Отправить":
         await update.message.reply_text(
             "Выберите действие:",
