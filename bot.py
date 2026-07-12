@@ -228,6 +228,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
    
+    if update.effective_user.id == ADMIN_ID:
+
+        if text == "⚙️ Админ-панель":
+            await update.message.reply_text(
+                "⚙️ Панель администратора",
+                reply_markup=admin_markup
+            )
+            return
+
+        elif text == "🔙 Главное меню":
+            await update.message.reply_text(
+                "Главное меню",
+                reply_markup=admin_button_markup
+            )
+            return
+
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
 
     if context.user_data.get("waiting_for_order") and text not in buttons:
