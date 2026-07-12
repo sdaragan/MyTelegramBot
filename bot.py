@@ -34,7 +34,7 @@ markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+DB_PATH = "/data/users.db"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
