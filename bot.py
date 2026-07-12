@@ -327,11 +327,6 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
 
-        if text in ("🍽 Обновить меню", "🥘 Обновить обеды"):
-            return WAITING_SETTING_PHOTO
-
-        return WAITING_SETTING_TEXT
-
     return ConversationHandler.END
 
 async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -346,6 +341,7 @@ async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "🖼 Изменить фото":
+    context.user_data["editing"] = section
         await update.message.reply_text("📷 Отправьте новую фотографию.")
         return WAITING_SETTING_PHOTO
 
