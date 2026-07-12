@@ -42,8 +42,10 @@ def init_db():
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY
+            user_id INTEGER PRIMARY KEY,
+            orders INTEGER DEFAULT 0
         )
+       
     """)
 
     conn.commit()
@@ -201,10 +203,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
 
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "UPDATE users SET orders = orders + 1 WHERE user_id = ?",
+            (update.effective_user.id,)
+        )
+
+        conn.commit()
+        conn.close()
+
         await update.message.reply_text(
             "✅ Спасибо! Ваш заказ получен.\n\n"
             "Мы свяжемся с вами для подтверждения заказа."
         )
+
         return
 
     if text == "🍽 Меню":
