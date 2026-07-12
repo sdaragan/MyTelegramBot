@@ -21,6 +21,7 @@ TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
 
 WAITING_BROADCAST = 1
+WAITING_PHOTO = 2
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -85,31 +86,47 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Пользователей в базе: {count}"
     )
 
-async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    await update.message.reply_text(
+        "📷 Отправьте фотографию с подписью, которую нужно разослать всем пользователям."
+    )
+
+    return WAITING_PHOTO
+
+async def broadcast_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message.photo:
+        await update.message.reply_text(
+            "❌ Пожалуйста, отправьте именно фотографию."
+        )
+        return WAITING_PHOTO
+
+    photo = update.message.photo[-1].file_id
+    caption = update.message.caption or ""
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
     cursor.execute("SELECT user_id FROM users")
     users = cursor.fetchall()
+    conn.close()
 
     sent = 0
 
     for user in users:
         try:
-            await context.bot.send_message(
+            await context.bot.send_photo(
                 chat_id=user[0],
-                text=text
+                photo=photo,
+                caption=caption
             )
             sent += 1
         except Exception as e:
             print(e)
 
-    conn.close()
-
     await update.message.reply_text(
-        f"Рассылка завершена.\n\nОтправлено: {sent}"
+        f"✅ Рассылка завершена.\n\nОтправлено: {sent}"
     )
 
     return ConversationHandler.END
@@ -230,9 +247,17 @@ init_db()
 app = ApplicationBuilder().token(TOKEN).build()
 
 conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("send", send)],
+    entry_points=[
+        CommandHandler("send", send),
+        CommandHandler("sendphoto", sendphoto),
+    ],
     states={
-        WAITING_BROADCAST: [MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)]
+        WAITING_BROADCAST: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)
+        ],
+        WAITING_PHOTO: [
+            MessageHandler(filters.PHOTO, broadcast_photo)
+        ],
     },
     fallbacks=[],
 )
