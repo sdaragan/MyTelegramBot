@@ -23,6 +23,8 @@ ADMIN_ID = 6429081620
 WAITING_BROADCAST = 1
 WAITING_CONFIRM = 2
 WAITING_PHOTO = 3
+WAITING_SETTING_TEXT = 4
+WAITING_SETTING_PHOTO = 5
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -50,6 +52,18 @@ admin_keyboard = [
     ["📦 Заказы", "⚙️ Настройки"],
     ["🔙 Главное меню"]
 ]
+
+settings_keyboard = [
+    ["🍽 Обновить меню", "🥘 Обновить обеды"],
+    ["🚚 Обновить доставку", "🕒 Обновить режим"],
+    ["📝 Изменить текст", "🖼 Изменить фото"],
+    ["🔙 Админ-панель"]
+]
+
+settings_markup = ReplyKeyboardMarkup(
+    settings_keyboard,
+    resize_keyboard=True
+)
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 admin_button_markup = ReplyKeyboardMarkup(admin_button_keyboard, resize_keyboard=True)
@@ -212,6 +226,30 @@ async def confirm_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=admin_main_markup
     )
 
+    return ConversationHandler.END
+
+async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    text = update.message.text
+
+    if text in [
+        "🍽 Обновить меню",
+        "🥘 Обновить обеды",
+        "🚚 Обновить доставку",
+        "🕒 Обновить режим"
+    ]:
+        context.user_data["editing_section"] = text
+
+        await update.message.reply_text(
+            f"Вы выбрали:\n\n{text}\n\nЧто хотите изменить?",
+            reply_markup=settings_markup
+        )
+
+    return ConversationHandler.END
+
+async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -390,6 +428,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Используйте этот чат для просмотра и обработки заказов."
             )
 
+            return
+
+        elif text == "⚙️ Настройки":
+            await update.message.reply_text(
+                "⚙️ Настройки\n\nВыберите раздел для изменения:",
+                reply_markup=settings_markup
+            )
             return
 
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
