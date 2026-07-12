@@ -21,7 +21,8 @@ TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
 ADMIN_ID = 6429081620
 
 WAITING_BROADCAST = 1
-WAITING_PHOTO = 2
+WAITING_CONFIRM = 2
+WAITING_PHOTO = 3
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -147,6 +148,14 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+    context.user_data["broadcast_text"] = text
+
+await update.message.reply_text(
+    f"Вы собираетесь отправить:\n\n{text}\n\nПодтвердите отправку.",
+    reply_markup=confirm_broadcast_markup
+)
+
+return WAITING_CONFIRM
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -217,6 +226,63 @@ async def broadcast_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ Рассылка завершена.\n\nОтправлено: {sent}"
+    )
+
+    return ConversationHandler.END
+
+async def confirm_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return ConversationHandler.END
+
+    text = update.message.text
+
+    if text == "❌ Отмена":
+        context.user_data.pop("broadcast_text", None)
+        await update.message.reply_text(
+            "❌ Рассылка отменена.",
+            reply_markup=admin_markup
+        )
+        return ConversationHandler.END
+
+    if text != "✅ Отправить":
+        await update.message.reply_text(
+            "Выберите:\n\n✅ Отправить\nили\n❌ Отмена",
+            reply_markup=confirm_broadcast_markup
+        )
+        return WAITING_CONFIRM
+
+    text = context.user_data.get("broadcast_text")
+
+    if not text:
+        await update.message.reply_text(
+            "Текст рассылки не найден.",
+            reply_markup=admin_markup
+        )
+        return ConversationHandler.END
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users")
+    users = cursor.fetchall()
+    conn.close()
+
+    sent = 0
+
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user[0],
+                text=text
+            )
+            sent += 1
+        except Exception:
+            pass
+
+    context.user_data.pop("broadcast_text", None)
+
+    await update.message.reply_text(
+        f"✅ Рассылка завершена.\n\nОтправлено: {sent}",
+        reply_markup=admin_markup
     )
 
     return ConversationHandler.END
@@ -413,10 +479,16 @@ conv_handler = ConversationHandler(
         WAITING_BROADCAST: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast)
         ],
+
+        WAITING_CONFIRM: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_broadcast)
+        ],
+
         WAITING_PHOTO: [
             MessageHandler(filters.PHOTO, broadcast_photo)
         ],
     },
+    
     fallbacks=[],
 )
 
