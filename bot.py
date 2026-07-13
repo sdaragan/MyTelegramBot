@@ -25,7 +25,7 @@ WAITING_CONFIRM = 2
 WAITING_PHOTO = 3
 
 main_keyboard = [
-    ["🍽 Меню", "🥘 Комплексные обеды"],
+    ["🍽 Меню", "🍲 Комплексные обеды"],
     ["🚚 Доставка", "📝 Оформить заказ"],
     ["🕒 Режим работы", "💳 Оплата"],
     ["📞 Контакты"]
@@ -405,18 +405,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
 
     text = update.message.text
-    print("ПОЛУЧЕН ТЕКСТ:", repr(text))
-   
+
+    # -------------------- АДМИН --------------------
+
     if update.effective_user.id == ADMIN_ID:
 
-        if text == "⚙️ Админ-панель":
+        if text in ["⚙️ Админ-панель", "🔐 Админ-панель"]:
             await update.message.reply_text(
                 "⚙️ Панель администратора",
                 reply_markup=admin_markup
             )
             return
 
-        elif text == "🔙 Главное меню":
+        elif text in ["🏠 Главное меню", "🔙 Главное меню"]:
             await update.message.reply_text(
                 "Главное меню",
                 reply_markup=admin_main_markup
@@ -431,103 +432,139 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await stats(update, context)
             return
 
+        elif text == "📢 Рассылка":
+            await send(update, context)
+            return
+
         elif text == "📦 Заказы":
 
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
 
-            cursor.execute("SELECT COALESCE(SUM(orders), 0) FROM users")
-            orders_count = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT COALESCE(SUM(orders),0) FROM users"
+            )
+
+            orders = cursor.fetchone()[0]
 
             conn.close()
 
             await update.message.reply_text(
                 f"📦 Заказы\n\n"
-                f"📊 Всего заказов: {orders_count}\n\n"
-                f"💬 Все новые заказы автоматически отправляются в чат администратора.\n"
-                f"Используйте этот чат для просмотра и обработки заказов."
+                f"Всего заказов: {orders}"
             )
 
             return
 
-    buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
+    # -------------------- ОФОРМЛЕНИЕ ЗАКАЗА --------------------
 
-    if context.user_data.get("waiting_for_order") and text not in buttons:
-        context.user_data["waiting_for_order"] = False
+    buttons = [
+        "🍽 Меню",
+        "🍲 Комплексные обеды",
+        "🚚 Доставка",
+        "📝 Оформить заказ",
+        "🕒 Режим работы",
+        "💳 Оплата",
+        "📞 Контакты",
+        "⚙️ Админ-панель",
+        "🔐 Админ-панель",
+        "🏠 Главное меню",
+        "🔙 Главное меню",
+    ]
 
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=(
-                "🔔 НОВЫЙ ЗАКАЗ\n\n"
-                f"{text}\n\n"
-                "👤 От пользователя:\n"
-                f"@{update.message.from_user.username}"
+    if context.user_data.get("waiting_for_order"):
+
+        if text not in buttons:
+
+            context.user_data["waiting_for_order"] = False
+
+            await context.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=(
+                    "🔔 НОВЫЙ ЗАКАЗ\n\n"
+                    f"{text}"
+                )
             )
-        )
 
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
 
-        cursor.execute(
-            "UPDATE users SET orders = orders + 1 WHERE user_id = ?",
-            (update.effective_user.id,)
-        )
+            cursor.execute(
+                "UPDATE users SET orders = orders + 1 WHERE user_id=?",
+                (update.effective_user.id,)
+            )
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
 
-        await update.message.reply_text(
-            "✅ Спасибо! Ваш заказ получен.\n\n"
-            "Мы свяжемся с вами для подтверждения заказа."
-        )
+            await update.message.reply_text(
+                "✅ Спасибо! Ваш заказ получен.\n\n"
+                "Мы скоро свяжемся с вами."
+            )
 
-        return
+            return
 
-    elif text == "🍽 Меню":
-        context.user_data["waiting_for_order"] = False
+        else:
+            context.user_data["waiting_for_order"] = False
+
+    # -------------------- МЕНЮ --------------------
+
+    if text == "🍽 Меню":
 
         with open("menu.jpg", "rb") as photo:
+
             await update.message.reply_photo(
                 photo=photo,
                 caption="🍽 Меню"
             )
+
         return
 
-    elif text == "🥘 Комплексные обеды":
-        print("ЗАШЕЛ В ВЕТКУ КОМПЛЕКСНЫЕ ОБЕДЫ")  
-        context.user_data["waiting_for_order"] = False
+    elif text == "🍲 Комплексные обеды":
 
         with open("iunch.jpg", "rb") as photo:
+
             await update.message.reply_photo(
                 photo=photo,
                 caption="🍲 Комплексные обеды"
             )
-        return 
+
+        return
 
     elif text == "🚚 Доставка":
+
         await update.message.reply_text(
             get_setting("delivery_text")
         )
 
         photo = get_setting("delivery_photo")
- 
+
         if photo:
             await update.message.reply_photo(photo=photo)
 
+        return
+
     elif text == "📝 Оформить заказ":
+
         context.user_data["waiting_for_order"] = True
+
         await update.message.reply_text(
-        "📝 ОФОРМИТЬ ЗАКАЗ\n\n"
-        "Отправьте заказ одним сообщением по шаблону:\n\n"
-        "👤 Имя\n"
-        "📞 Телефон\n"
-        "📍 Адрес доставки\n"
-        "🍽 Блюда и количество\n\n"
-        "Или свяжитесь с нами:\n"
-        "📞 +7 949 605-30-96"
-    )
+            "📝 Отправьте одним сообщением:\n\n"
+            "• Имя\n"
+            "• Телефон\n"
+            "• Адрес доставки\n"
+            "• Что хотите заказать\n\n"
+            "Например:\n\n"
+            "Иван\n"
+            "+7 949 000-00-00\n"
+            "ул. Артема, 15\n"
+            "2 борща, 3 котлеты"
+        )
+
+        return
 
     elif text == "🕒 Режим работы":
+
         await update.message.reply_text(
             get_setting("work_text")
         )
@@ -536,23 +573,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if photo:
             await update.message.reply_photo(photo=photo)
-   
+
+        return
+
     elif text == "💳 Оплата":
+
         await update.message.reply_text(
-            "💳 СПОСОБЫ ОПЛАТЫ\n\n"
-            "💵 Наличные\n\n"
-            "💳 Банковская карта\n\n"
-            "📱 Оплата по QR-коду\n\n"
-            "✅ Выберите наиболее удобный для вас способ оплаты."
+            "💳 Оплата\n\n"
+            "✅ Наличными\n"
+            "✅ Банковской картой\n"
+            "✅ По QR-коду"
         )
 
+        return
+
     elif text == "📞 Контакты":
+
         await update.message.reply_text(
             get_setting("contacts_text")
         )
 
+        return
+
     else:
-        await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
+
+        await update.message.reply_text(
+            "Пожалуйста, воспользуйтесь кнопками меню."
+        )
+
 init_db()
 app = ApplicationBuilder().token(TOKEN).build()
 
