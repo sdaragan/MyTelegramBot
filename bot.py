@@ -616,30 +616,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif text == "🍽 Меню":
-        photo = get_setting("menu_photo")
-
-        if photo:
+        with open("menu.jpg", "rb") as photo:
             await update.message.reply_photo(
                 photo=photo,
                 caption="🍽 Меню"
             )
-        else:
-            await update.message.reply_text(
-                "Фото меню ещё не загружено."
-            )
 
     elif text == "🥘 Комплексные обеды":
-        photo = get_setting("lunch_photo")
-
-        if photo:
-            await update.message.reply_photo(
-                photo=photo,
-                caption="🥘 Комплексные обеды"
-            )
-        else:
-            await update.message.reply_text(
-                "Фото комплексных обедов ещё не загружено."
-            )
+       with open("lunch.jpg", "rb") as photo:
+           await update.message.reply_photo(
+               photo=photo,
+               caption="🍲 Комплексные обеды"
+           )
 
     elif text == "🚚 Доставка":
         await update.message.reply_text(
