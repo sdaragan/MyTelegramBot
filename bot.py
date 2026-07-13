@@ -633,7 +633,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                photo=photo,
                caption="🍲 Комплексные обеды"
            )
-       return 
+        return 
 
     elif text == "🚚 Доставка":
         await update.message.reply_text(
