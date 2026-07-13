@@ -320,7 +320,6 @@ async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     section = context.user_data.get("editing")
-
     if not section:
         return ConversationHandler.END
 
@@ -354,8 +353,7 @@ async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def setting_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("SETTING PHOTO")
-
+    
     if update.effective_user.id != ADMIN_ID:
         return ConversationHandler.END
 
@@ -366,6 +364,9 @@ async def setting_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo = update.message.photo[-1].file_id
 
     section = context.user_data.get("editing")
+
+    print("SETTING PHOTO")
+    print("SECTION =", section)
 
     if section == "menu":
         set_setting("menu_photo", photo)
@@ -688,10 +689,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     if text == "📝 Изменить текст":
+        context.user_data["editing_mode"] = "text"
         return await setting_text(update, context)
 
     if text == "🖼 Изменить фото":
-        return await setting_text(update, context)
+        context.user_data["editing_mode"] = "photo"
+        return await setting_photo(update, context)
+
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
 init_db()
