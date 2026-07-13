@@ -17,7 +17,7 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = "8635192315:AAHAfdSOviCscJeoFNg7-nTWUXT0YoC0KSI"
+TOKEN = "8635192315:AAG_JC7QIkcjUCe-6orGoG4hPviDv1L6dOg"
 ADMIN_ID = 6429081620
 
 WAITING_BROADCAST = 1
