@@ -405,6 +405,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
 
     text = update.message.text
+    print("ПОЛУЧЕН ТЕКСТ:", repr(text))
    
     if update.effective_user.id == ADMIN_ID:
 
