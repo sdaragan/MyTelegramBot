@@ -23,8 +23,6 @@ ADMIN_ID = 6429081620
 WAITING_BROADCAST = 1
 WAITING_CONFIRM = 2
 WAITING_PHOTO = 3
-WAITING_SETTING_TEXT = 4
-WAITING_SETTING_PHOTO = 5
 
 main_keyboard = [
     ["🍽 Меню", "🥘 Комплексные обеды"],
@@ -48,22 +46,10 @@ confirm_broadcast_markup = ReplyKeyboardMarkup(
 
 admin_keyboard = [
     ["👥 Пользователи", "📊 Статистика"],
-    ["📢 Рассылка текста", "🖼 Рассылка фото"],
-    ["📦 Заказы", "⚙️ Настройки"],
-    ["🔙 Главное меню"]
+    ["📢 Рассылка"],
+    ["📦 Заказы"],
+    ["🏠 Главное меню"]
 ]
-
-settings_keyboard = [
-    ["🍽 Обновить меню", "🥘 Обновить обеды"],
-    ["🚚 Обновить доставку", "🕒 Обновить режим"],
-    ["📝 Изменить текст", "🖼 Изменить фото"],
-    ["🔙 Админ-панель"]
-]
-
-settings_markup = ReplyKeyboardMarkup(
-    settings_keyboard,
-    resize_keyboard=True
-)
 
 markup = ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True)
 admin_button_markup = ReplyKeyboardMarkup(admin_button_keyboard, resize_keyboard=True)
@@ -74,7 +60,7 @@ admin_main_keyboard = [
     ["🚚 Доставка", "📝 Оформить заказ"],
     ["🕒 Режим работы", "💳 Оплата"],
     ["📞 Контакты"],
-    ["⚙️ Админ-панель"]
+    ["🔐 Админ-панель"]
 ]
 
 admin_main_markup = ReplyKeyboardMarkup(
@@ -285,110 +271,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return ConversationHandler.END
-
-    text = update.message.text
-
-    sections = {
-        "🍽 Обновить меню": "menu",
-        "🥘 Обновить обеды": "lunch",
-        "🚚 Обновить доставку": "delivery",
-        "🕒 Обновить режим": "work",
-    }
-
-    if text in sections:
-        context.user_data["editing"] = sections[text]
-
-        await update.message.reply_text(
-            f"Вы выбрали:\n\n{text}\n\nЧто хотите изменить?",
-            reply_markup=ReplyKeyboardMarkup(
-                [
-                    ["📝 Изменить текст"],
-                    ["🖼 Изменить фото"],
-                    ["🔙 Настройки"],
-                ],
-                resize_keyboard=True,
-            ),
-        )
-
-    return WAITING_SETTING_TEXT
-
-async def setting_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return ConversationHandler.END
-
-    section = context.user_data.get("editing")
-    if not section:
-        return ConversationHandler.END
-
-    text = update.message.text
-
-    if text == "🖼 Изменить фото":
-        context.user_data["editing"] = section
-        await update.message.reply_text("📷 Отправьте новую фотографию.")
-        return WAITING_SETTING_PHOTO
-
-    elif text == "📝 Изменить текст":
-        await update.message.reply_text("✏️ Отправьте новый текст.")
-        return WAITING_SETTING_TEXT
-
-    if section == "delivery":
-        set_setting("delivery_text", text)
-
-    elif section == "work":
-        set_setting("work_text", text)
-
-    elif section == "contacts":
-        set_setting("contacts_text", text)
-
-    context.user_data.pop("editing", None)
-
-    await update.message.reply_text(
-        "✅ Текст успешно обновлён.",
-        reply_markup=settings_markup
-    )
-
-    return ConversationHandler.END
-
-async def setting_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    
-    if update.effective_user.id != ADMIN_ID:
-        return ConversationHandler.END
-
-    if not update.message.photo:
-        await update.message.reply_text("❌ Отправьте фотографию.")
-        return WAITING_SETTING_PHOTO
-
-    photo = update.message.photo[-1].file_id
-
-    section = context.user_data.get("editing")
-
-    print("SETTING PHOTO")
-    print("SECTION =", section)
-
-    if section == "menu":
-        set_setting("menu_photo", photo)
-
-    elif section == "lunch":
-        set_setting("lunch_photo", photo)
-
-    elif section == "delivery":
-        set_setting("delivery_photo", photo)
-
-    elif section == "work":
-        set_setting("work_photo", photo)
-
-    context.user_data.pop("editing", None)
-
-    await update.message.reply_text(
-        "✅ Фото успешно обновлено.",
-        reply_markup=settings_markup
-    )
-
-    return ConversationHandler.END
-
 async def sendphoto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return ConversationHandler.END
@@ -567,21 +449,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             return
 
-        elif text == "⚙️ Настройки":
-            await update.message.reply_text(
-                "⚙️ Настройки\n\nВыберите раздел для изменения:",
-                reply_markup=settings_markup
-            )
-            return
-
-        elif text in [
-            "🍽 Обновить меню",
-            "🥘 Обновить обеды",
-            "🚚 Обновить доставку",
-            "🕒 Обновить режим"
-        ]:
-            return await settings(update, context)
-
     buttons = ["🍽 Меню", "🥘 Комплексные обеды", "🚚 Доставка", "📝 Оформить заказ", "🕒 Режим работы", "💳 Оплата", "📞 Контакты"]
 
     if context.user_data.get("waiting_for_order") and text not in buttons:
@@ -682,14 +549,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             get_setting("contacts_text")
         )
 
-    if text == "📝 Изменить текст":
-        context.user_data["editing_mode"] = "text"
-        return await setting_text(update, context)
-
-    if text == "🖼 Изменить фото":
-        context.user_data["editing_mode"] = "photo"
-        return await setting_photo(update, context)
-
     else:
         await update.message.reply_text("Спасибо! Мы получили ваше сообщение.")
 init_db()
@@ -724,13 +583,6 @@ conv_handler = ConversationHandler(
             MessageHandler(filters.PHOTO, broadcast_photo)
         ],
 
-        WAITING_SETTING_TEXT: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, setting_text)
-        ],
-
-        WAITING_SETTING_PHOTO: [
-            MessageHandler(filters.PHOTO, setting_photo)
-        ],
 },
 
     fallbacks=[],
