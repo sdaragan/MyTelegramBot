@@ -628,7 +628,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "🥘 Комплексные обеды":
         context.user_data["waiting_for_order"] = False
 
-       with open("iunch.jpg", "rb") as photo:
+        with open("iunch.jpg", "rb") as photo:
            await update.message.reply_photo(
                photo=photo,
                caption="🍲 Комплексные обеды"
