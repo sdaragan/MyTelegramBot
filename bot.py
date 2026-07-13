@@ -621,13 +621,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 photo=photo,
                 caption="🍽 Меню"
             )
+        return
 
     elif text == "🥘 Комплексные обеды":
-       with open("lunch.jpg", "rb") as photo:
+       with open("iunch.jpg", "rb") as photo:
            await update.message.reply_photo(
                photo=photo,
                caption="🍲 Комплексные обеды"
            )
+       return 
 
     elif text == "🚚 Доставка":
         await update.message.reply_text(
